@@ -1,3 +1,4 @@
+#This script has been created for update one manager for specific group of users
 # path of list.txt with the sAMAccountName of users what you need to update the specific
 $users_list = "PATH\list.txt"
 
