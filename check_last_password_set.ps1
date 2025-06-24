@@ -1,5 +1,5 @@
 # Define the group names
-$groups = @("GROUP1", "GRUPO2")
+$groups = @("GROUP1", "GROUP2")
 
 $daysThreshold = 50
 $thresholdDate = (Get-Date).AddDays(-$daysThreshold)
