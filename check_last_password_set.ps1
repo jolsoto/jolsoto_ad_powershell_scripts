@@ -1,16 +1,27 @@
-#name of groups you want to check
-$groups = @("GROUP1", "GROUP2")
-#time in days back you want to check
+# Define the group names
+$groups = @("GROUP1", "GRUPO2")
+
 $daysThreshold = 50
 $thresholdDate = (Get-Date).AddDays(-$daysThreshold)
 
 $users = foreach ($group in $groups) {
-    Get-ADGroupMember -Identity $group -Recursive | Where-Object { $_.objectClass -eq "user" } |
-    Get-ADUser -Properties pwdLastSet | Where-Object {
-        $_.pwdLastSet -ne 0 -and ([datetime]::FromFileTimeUtc($_.pwdLastSet) -lt $thresholdDate)
+    # Check if the group Verifica si el group existe
+    if (Get-ADGroup -Filter { Name -eq $group }) {
+        Get-ADGroupMember -Identity $group -Recursive | Where-Object { $_.objectClass -eq 'user' }
+    } else {
+        Write-Warning "The group '$group' does not exist Active Directory."
     }
 }
 
-#showing in screen the list
-$users | Select-Object Name, SamAccountName, @{Name="LastPasswordSet"; Expression={[datetime]::FromFileTimeUtc($_.pwdLastSet)}} |
-    Format-Table -AutoSize
+$users = $users | Sort-Object -Property SamAccountName -Unique
+
+$users | ForEach-Object {
+    $user = Get-ADUser -Identity $_.SamAccountName -Properties Name, SamAccountName, PasswordLastSet
+    if ($user.PasswordLastSet -lt $thresholdDate) {
+        [PSCustomObject]@{
+            Name            = $user.Name
+            SamAccountName = $user.SamAccountName
+            PasswordLastSet = $user.PasswordLastSet
+        }
+    }
+}
